@@ -1,0 +1,35 @@
+{
+  "name": "workbench-agent-harness",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "A durable, general-purpose agent supervisor with scoped parallel workers.",
+  "bin": {
+    "workbench": "dist/cli.js"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "0.85.1",
+    "@earendil-works/pi-ai": "0.85.1",
+    "@aws-sdk/credential-providers": "^3.1000.0",
+    "@smithy/signature-v4": "^5.0.0",
+    "@smithy/protocol-http": "^5.0.0",
+    "@aws-crypto/sha256-js": "^5.2.0",
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "typebox": "1.3.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "check": "npm run typecheck && npm test",
+    "start": "node --import tsx src/cli.ts"
+  }
+}

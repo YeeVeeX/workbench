@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+.npmrc
+.workbench/
+config.json
+state/
+cache/
+sessions/
+validation/
+*.log
+*.sqlite*
+*.pem
+*.key
+*.zip

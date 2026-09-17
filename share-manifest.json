@@ -1,0 +1,239 @@
+{
+  "format": "workbench.share-source/1",
+  "package": {
+    "name": "workbench-agent-harness",
+    "version": "0.2.0"
+  },
+  "files": [
+    {
+      "path": ".github/workflows/check.yml",
+      "bytes": 489,
+      "sha256": "2a7ecdababef81f3f34976f8417c34aa30f5238df10029aa6a869af74c39f5f8"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 143,
+      "sha256": "201bbe5a2e0c50ffdcc25f0c5a8b7615136c43db271aea8efec511887c5fa6ae"
+    },
+    {
+      "path": "AGENTS.md",
+      "bytes": 6778,
+      "sha256": "4181e47aa6c52c2095fdb38186a8f18e9fd63ad1ebbc56be55bedeb08dfb41af"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1079,
+      "sha256": "1d535cdb6a82eb0c33b8811be26c9df001b70c37576d89652edd2e504a8fc6de"
+    },
+    {
+      "path": "README.md",
+      "bytes": 11186,
+      "sha256": "1d7f7eca8243d2dc1beb74098755f5ecfe402af8517d9f024160ced75ca1c42e"
+    },
+    {
+      "path": "SECURITY.md",
+      "bytes": 5679,
+      "sha256": "09df5a4557b3c2661489b397c1b22998b70779123ca9916b2062826ae1c3eb44"
+    },
+    {
+      "path": "THIRD-PARTY-NOTICES.md",
+      "bytes": 5884,
+      "sha256": "6fe3153b2036d9aa1bf85b310b3d01ee4792d3810e171d5f1383bce5d4dc4cae"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 192247,
+      "sha256": "797e8bab17f7af65a450ed1a8827429e051a2928124241cd513d542c9edaaafb"
+    },
+    {
+      "path": "package.json",
+      "bytes": 957,
+      "sha256": "6e8363f705ad9f1332bb6b8297549f7ec6b547807b4d7bd7f21747abe4c70715"
+    },
+    {
+      "path": "scripts/check.mjs",
+      "bytes": 551,
+      "sha256": "2528a6b042310730b4b1f5c7a12d7c461615e195ddbe9544e49c41d76b3aa121"
+    },
+    {
+      "path": "scripts/install-workbench.ps1",
+      "bytes": 46619,
+      "sha256": "d671b85ea820eecce38413a28068b67c1eb26108278aea4d236b6ec2e5ba1aea"
+    },
+    {
+      "path": "scripts/rollback-workbench.ps1",
+      "bytes": 3537,
+      "sha256": "4f6e311a70a2b68fb18d2df9aa014c1cf41f49b129d235ee6615354ab54a8cea"
+    },
+    {
+      "path": "scripts/share-install.ps1",
+      "bytes": 11868,
+      "sha256": "f8e45eb5c419b4de5fa117f99c1d76e67a6bef234d5e0ba3a3a8881b8800e5c5"
+    },
+    {
+      "path": "src/adapter.ts",
+      "bytes": 35925,
+      "sha256": "e74170ea99add44745c4779120e7dae0f0b0111efdaf4821f73492e1c20e2182"
+    },
+    {
+      "path": "src/broker.ts",
+      "bytes": 76620,
+      "sha256": "60f864f8a4f13623e9ca85faf15ac9bb542b4cb6db07ef6796cd44c192da203e"
+    },
+    {
+      "path": "src/capabilities.ts",
+      "bytes": 8015,
+      "sha256": "aaf995b65a2cd6dbac70a80b090b5e7bdae47ac62e88d2e541d8f5092f953fe3"
+    },
+    {
+      "path": "src/checks.ts",
+      "bytes": 1952,
+      "sha256": "28cffc5a23cfcf34599fe89897458d4395988e876ac15a61ca1ad3448a464db4"
+    },
+    {
+      "path": "src/cli.ts",
+      "bytes": 20392,
+      "sha256": "d64b82e1a490a95a200083030a4ddd99d5c47d64b517b9106b79e140f1b1c871"
+    },
+    {
+      "path": "src/config.ts",
+      "bytes": 6748,
+      "sha256": "19b2b42c63390a112ac96cc78b95ed6752aa1d96a171ba9853106e55f4a6c496"
+    },
+    {
+      "path": "src/contracts.ts",
+      "bytes": 4081,
+      "sha256": "3a2588503f44b9e0925c1434984b2666e2ccf134517766bb17585c3e1c8ed341"
+    },
+    {
+      "path": "src/gateway.ts",
+      "bytes": 24892,
+      "sha256": "47f8169d06e8c8f9df35cda9d6451d7e69f448d4b643c3f82bf3af3344101b9b"
+    },
+    {
+      "path": "src/mcp.ts",
+      "bytes": 6118,
+      "sha256": "e4141aaa03523aedbbdb93b22cf61c5db43b2d21d00284a167eac51aed22865a"
+    },
+    {
+      "path": "src/memory.ts",
+      "bytes": 3067,
+      "sha256": "c3a5c2d11aee60da14bbc3ddc29a7dfe946606cb46aca6131eb9128003281116"
+    },
+    {
+      "path": "src/paths.ts",
+      "bytes": 3947,
+      "sha256": "fe58badc5604bda19a5c10288675f809a5a7504ae0be8f3701fb912e607d3bfc"
+    },
+    {
+      "path": "src/presets.ts",
+      "bytes": 3003,
+      "sha256": "843630adc80d48d8f441c973942b30efff2d438bf7fb315563d54af138e0fd0d"
+    },
+    {
+      "path": "src/providers.ts",
+      "bytes": 54214,
+      "sha256": "645f043e5e2131e4bcac6da5c5008e95bf234a8bd148ab2be69057ba0478cefc"
+    },
+    {
+      "path": "src/store.ts",
+      "bytes": 38490,
+      "sha256": "4883ce6a45261ffa7398058a4878d4955750d22a5e1294542940ceb02274d150"
+    },
+    {
+      "path": "src/supervisor.ts",
+      "bytes": 36946,
+      "sha256": "c613a887199d0f3445a91ae10095171fa3e97e550225278dbe636f1ee6a122ed"
+    },
+    {
+      "path": "src/verification.ts",
+      "bytes": 36401,
+      "sha256": "2386b81b69901a06df08eb64120c5e87ca36e4090663681b641408a3e1b1e9f2"
+    },
+    {
+      "path": "tests/adapter.test.ts",
+      "bytes": 103244,
+      "sha256": "c7d228fb28e1634a3c7d99e38a54379eeddd9dac7603ee17bdd24d04d1bc1e25"
+    },
+    {
+      "path": "tests/broker.test.ts",
+      "bytes": 54865,
+      "sha256": "1a2ab0a891e51cbc6882480468de8d7834265a216ef6319bebc705377304959f"
+    },
+    {
+      "path": "tests/cli.test.ts",
+      "bytes": 2689,
+      "sha256": "904b78bb51f1a5ce8a4852a33d695fb782d358627eacd5e9091790ce6591eec8"
+    },
+    {
+      "path": "tests/configuration.test.ts",
+      "bytes": 5822,
+      "sha256": "32e2fdfa310ac37a16cb7c6dcfeea91dd56d586eb6f4062bf8b50b4caa13c8b2"
+    },
+    {
+      "path": "tests/gateway.test.ts",
+      "bytes": 32625,
+      "sha256": "617b57f96006a149c567405cd51926e7c85c847d31cd3662d6b243a2c9b681e4"
+    },
+    {
+      "path": "tests/installer-review.test.ts",
+      "bytes": 6641,
+      "sha256": "c9d1b2be12a4aa46f0c1e5e82b59909e5e2ae336085423b2cc393e4ce47da0f0"
+    },
+    {
+      "path": "tests/installer.test.ts",
+      "bytes": 46405,
+      "sha256": "ac7264923a5611175e6d66183fbe7a9ba60b1aa759b14e649077eebf47b748b5"
+    },
+    {
+      "path": "tests/interactive.test.ts",
+      "bytes": 14185,
+      "sha256": "2c2b31eb37766a240bfbb62546c5370341ec6ea899dadc429dac77976424cb8a"
+    },
+    {
+      "path": "tests/review-regressions.test.ts",
+      "bytes": 46002,
+      "sha256": "a824da62d43b762697ebd063352b1ae8247f1323c1b41f08d5ef29dc003e9ce4"
+    },
+    {
+      "path": "tests/share-config.test.ts",
+      "bytes": 8883,
+      "sha256": "3dfe2af0dfcb6f3ed63b116d249c37a1b41043af6b661cdc4b0c06e91efdaf14"
+    },
+    {
+      "path": "tests/share-installer.test.ts",
+      "bytes": 22278,
+      "sha256": "c887b81dcc9468291b1e481e3aa961cfdefb3939218c142c32d01a1e899d3b29"
+    },
+    {
+      "path": "tests/store.test.ts",
+      "bytes": 60358,
+      "sha256": "6ba71aa3724d43f0c5372b09af9302970be01f0098834005356618970aac4752"
+    },
+    {
+      "path": "tests/supervisor.test.ts",
+      "bytes": 16051,
+      "sha256": "3e4ec151c7b2b6f18948c62f77118c61bedc522d15b32336a9d1c2d563921a71"
+    },
+    {
+      "path": "tests/verification.test.ts",
+      "bytes": 32780,
+      "sha256": "8f513d84bebcc50bc04aab300f5c8f47a85e340f9a58dbbdd0d788c4d60523f3"
+    },
+    {
+      "path": "third-party/pi-0.85.1/LICENSE",
+      "bytes": 1069,
+      "sha256": "0457f5bcec3b3b211605dfb5d1a49042fd638f3686a410fe099c24a25af13c48"
+    },
+    {
+      "path": "third-party/provenance.json",
+      "bytes": 12419,
+      "sha256": "bd1c6c670db8ad020adbf330f21e00ee29a31bf8924d0c8590f814eae6697496"
+    },
+    {
+      "path": "tsconfig.json",
+      "bytes": 313,
+      "sha256": "3de89b2f74c2a65320af9ba40dec3148cb8a3700e3e0994b6c5098d088f57e35"
+    }
+  ]
+}
