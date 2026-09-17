@@ -11,12 +11,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    env:
-      # GitHub's Windows image can expose an 8.3 alias in TEMP. Workbench
-      # deliberately rejects those aliases; use the runner's ordinary path.
-      TEMP: ${{ runner.temp }}
-      TMP: ${{ runner.temp }}
-      TMPDIR: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,4 +21,10 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: node scripts/check.mjs
+        env:
+          # The runner context is available at step scope. Avoid Windows
+          # image TEMP values containing an unsupported 8.3 alias.
+          TEMP: ${{ runner.temp }}
+          TMP: ${{ runner.temp }}
+          TMPDIR: ${{ runner.temp }}
       - run: npm run build
