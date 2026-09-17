@@ -12,8 +12,8 @@
     },
     {
       "path": ".github/workflows/check.yml",
-      "bytes": 512,
-      "sha256": "45801c486031e1ff14bfbd3b33cd8d96cf083e401bc1571d31bb4b431521cff1"
+      "bytes": 765,
+      "sha256": "4aaff9f438b69a24cc2b42da268daaacf949bdea8acfae8033b95e0549fbb501"
     },
     {
       "path": ".gitignore",

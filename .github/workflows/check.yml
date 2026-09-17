@@ -11,6 +11,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    env:
+      # GitHub's Windows image can expose an 8.3 alias in TEMP. Workbench
+      # deliberately rejects those aliases; use the runner's ordinary path.
+      TEMP: ${{ runner.temp }}
+      TMP: ${{ runner.temp }}
+      TMPDIR: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@v4
         with:
