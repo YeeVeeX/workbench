@@ -313,6 +313,10 @@ interface ProcessResult {
   executorExitCode?: number | null;
   executorStage?: string;
   executorStageTimesMs?: Record<string, number>;
+  executorOutput?: {
+    stdout: ReturnType<typeof filePreview> & { path: string };
+    stderr: ReturnType<typeof filePreview> & { path: string };
+  };
   exitCode: number | null;
   exitSignal?: string | null;
   cleanup: "confirmed" | "unknown";
@@ -440,6 +444,8 @@ public static class WorkbenchJob {
   [DllImport("kernel32.dll", SetLastError=true)] static extern IntPtr OpenProcess(uint access, bool inherit, int pid);
   [DllImport("kernel32.dll")] static extern uint GetConsoleCP();
   [DllImport("kernel32.dll")] static extern IntPtr GetConsoleWindow();
+  [DllImport("kernel32.dll")] static extern uint GetConsoleProcessList([Out] uint[] pids, uint count);
+  [DllImport("kernel32.dll")] static extern uint GetCurrentProcessId();
   [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr window);
   [DllImport("kernel32.dll")] static extern uint WaitForSingleObject(IntPtr handle, uint ms);
   [DllImport("kernel32.dll")] static extern bool GetExitCodeProcess(IntPtr process, out uint code);
@@ -489,8 +495,12 @@ public static class WorkbenchJob {
       // conhost that can outlive an echo; DETACHED_PROCESS lets nested npm/cmd
       // launches allocate a visible console. The helper owns the existing console
       // outside this job. Every command descendant still belongs to the job.
-      if (GetConsoleCP() == 0 || IsWindowVisible(GetConsoleWindow()))
-        throw new InvalidOperationException("Executor requires a hidden console to inherit.");
+      uint[] consolePids = new uint[1];
+      uint consoleCount = GetConsoleProcessList(consolePids, 1);
+      bool visible = IsWindowVisible(GetConsoleWindow());
+      Record(log, "{\"type\":\"process_executor_console\",\"processCount\":" + consoleCount + ",\"ownerPid\":" + consolePids[0] + ",\"visible\":" + (visible ? "true" : "false") + "}");
+      if (GetConsoleCP() == 0 || visible || consoleCount != 1 || consolePids[0] != GetCurrentProcessId())
+        throw new InvalidOperationException("Executor requires its own hidden console to inherit.");
       Record(log, "{\"type\":\"process_executor_stage\",\"stage\":\"creating-command\"}");
       Check(CreateProcess(exe, command, IntPtr.Zero, IntPtr.Zero, true, 0x00000404, env, cwd, ref si, out pi));
       Record(log, "{\"type\":\"process_executor_stage\",\"stage\":\"assigning-job\"}");
@@ -601,28 +611,54 @@ async function windowsProcess(
     parentPid: process.pid, environment: env,
   }), { flag: "wx", mode: 0o600 });
   writeFileSync(lifecycle, "", { flag: "wx", mode: 0o600 });
-  const out = openSync(stdout, "wx", 0o600);
+  // Native command handles are opened by the C# helper. Keep its own diagnostic
+  // streams separate, so neither writer can overwrite the other's evidence.
+  writeFileSync(stdout, "", { flag: "wx", mode: 0o600 });
+  writeFileSync(stderr, "", { flag: "wx", mode: 0o600 });
+  const executorStdout = path.join(directory, "executor-stdout.log");
+  const executorStderr = path.join(directory, "executor-stderr.log");
+  const out = openSync(executorStdout, "wx", 0o600);
   let err: number | undefined;
   let child: ReturnType<typeof spawn>;
   try {
-    err = openSync(stderr, "wx", 0o600);
+    err = openSync(executorStderr, "wx", 0o600);
     const powershell = path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
     child = spawn(powershell, ["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", script, "-RequestPath", request], {
-      cwd, env, shell: false, windowsHide: true, stdio: ["ignore", out, err],
+      // libuv suppresses CREATE_NO_WINDOW if ANY stdio entry is UV_INHERIT_FD.
+      // Pipes ensure this helper owns a hidden console regardless of its caller.
+      cwd, env, shell: false, windowsHide: true, stdio: ["ignore", "pipe", "pipe"],
     });
-  } finally {
+  } catch (error) {
     closeSync(out);
     if (err !== undefined) closeSync(err);
+    throw error;
   }
-  let exited = false;
+  let closed = false;
   let seen = 0;
   let stopAt: number | undefined;
   let ledgerError: unknown;
+  let outputError: unknown;
+  const retain = (fd: number) => (data: Buffer): void => {
+    try {
+      let offset = 0;
+      while (offset < data.length) {
+        const written = writeSync(fd, data, offset, data.length - offset);
+        if (written === 0) throw new Error("Executor evidence write made no progress.");
+        offset += written;
+      }
+    } catch (error) { outputError = error; }
+  };
+  child.stdout!.on("data", retain(out));
+  child.stderr!.on("data", retain(err));
+  child.stdout!.on("error", (error) => { outputError = error; });
+  child.stderr!.on("error", (error) => { outputError = error; });
   const began = Date.now();
   const executorStageTimesMs: Record<string, number> = {};
   let result: ProcessResult = { executorPid: child.pid, executorStage: "starting-powershell", executorStageTimesMs, exitCode: null, cleanup: "unknown", ...(launcher ? { launcher } : {}) };
-  child.once("error", () => { exited = true; result.reason = "Windows executor could not start."; result.cleanup = "confirmed"; });
-  child.once("exit", (code) => { exited = true; result.executorExitCode = code; });
+  child.once("error", () => { result.reason = "Windows executor could not start."; result.cleanup = "confirmed"; });
+  child.once("exit", (code) => { result.executorExitCode = code; });
+  // 'exit' can precede the last pipe data. 'close' includes EOF on both streams.
+  child.once("close", () => { closed = true; });
   const emit: ProcessEvent = (type, data) => { try { event(type, data); } catch (error) { ledgerError = error; } };
   emit("process_executor_started", { executorPid: child.pid, platform: "windows-job" });
   const readLifecycle = (): void => {
@@ -643,31 +679,48 @@ async function windowsProcess(
       emit(type, data);
     }
   };
-  while (!exited) {
-    try { readLifecycle(); } catch (error) { ledgerError = error; }
-    if ((signal.aborted || ledgerError) && stopAt === undefined) {
-      stopAt = Date.now() + CLEANUP_MS;
-      writeFileSync(cancel, "abort", { flag: "wx", mode: 0o600 });
-      emit("process_cleanup_requested", { pid: result.pid, executorPid: child.pid });
-    }
-    if (stopAt !== undefined && Date.now() >= stopAt) {
-      // The job's kill-on-close flag remains the ownership boundary if the helper stalls.
-      if (child.pid) {
-        const taskkill = path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "taskkill.exe");
-        const killer = spawn(taskkill, ["/PID", String(child.pid), "/T", "/F"], { env, windowsHide: true, stdio: "ignore" });
-        killer.on("error", () => { /* The unresolved cleanup state below is mandatory. */ });
-        const killDeadline = Date.now() + 1_000;
-        while (!exited && Date.now() < killDeadline) await delay(20);
-        if (killer.exitCode === null) killer.kill();
+  try {
+    while (!closed) {
+      try { readLifecycle(); } catch (error) { ledgerError = error; }
+      if ((signal.aborted || ledgerError || outputError) && stopAt === undefined) {
+        stopAt = Date.now() + CLEANUP_MS;
+        writeFileSync(cancel, "abort", { flag: "wx", mode: 0o600 });
+        emit("process_cleanup_requested", { pid: result.pid, executorPid: child.pid });
       }
-      result.cleanup = "unknown";
-      result.reason = "Windows executor cleanup exceeded its safety deadline.";
-      break;
+      if (stopAt !== undefined && Date.now() >= stopAt) {
+        // The job's kill-on-close flag remains the ownership boundary if the helper stalls.
+        if (child.pid) {
+          const taskkill = path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "taskkill.exe");
+          const killer = spawn(taskkill, ["/PID", String(child.pid), "/T", "/F"], { env, windowsHide: true, stdio: "ignore" });
+          killer.on("error", () => { /* The unresolved cleanup state below is mandatory. */ });
+          const killDeadline = Date.now() + 1_000;
+          while (!closed && Date.now() < killDeadline) await delay(20);
+          if (killer.exitCode === null) killer.kill();
+        }
+        result.cleanup = "unknown";
+        result.reason = "Windows executor cleanup exceeded its safety deadline.";
+        break;
+      }
+      await delay(20);
     }
-    await delay(20);
+  } finally {
+    // On a safety-deadline exit, stop readers before closing their evidence FDs.
+    child.stdout!.destroy();
+    child.stderr!.destroy();
+    for (const fd of [out, err]) {
+      try { fsyncSync(fd); } catch (error) { outputError = error; }
+      try { closeSync(fd); } catch (error) { outputError = error; }
+    }
   }
   try { readLifecycle(); } catch { result.cleanup = "unknown"; }
+  try {
+    result.executorOutput = {
+      stdout: { path: executorStdout, ...filePreview(executorStdout) },
+      stderr: { path: executorStderr, ...filePreview(executorStderr) },
+    };
+  } catch (error) { outputError = error; }
   if (signal.aborted) result.reason = signal.reason?.name === "TimeoutError" ? "timeout" : "aborted";
+  if (outputError) { result.cleanup = "unknown"; result.reason = "Windows executor output could not be preserved."; }
   if (ledgerError) { result.cleanup = "unknown"; result.reason = "Process lifecycle could not be recorded."; }
   if (!result.reason && result.cleanup === "unknown") result.reason = "Windows executor ended without proof of job quiescence.";
   return result;

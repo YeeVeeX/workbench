@@ -248,7 +248,26 @@ async function gitThroughJunction(root: string, args: string[], pathResult: bool
   try {
     await fs.symlink(root, native(alias), "junction");
     linkIdentity = await fs.lstat(native(alias), { bigint: true });
-    const result = await command("git", args, alias);
+    let queryArgs = args;
+    const marker = path.join(alias, ".git");
+    const markerStat = await fs.lstat(native(marker)).catch((error) => {
+      if (isMissing(error)) return undefined;
+      throw error;
+    });
+    if (markerStat?.isDirectory() && !markerStat.isSymbolicLink()) {
+      const configArgs = ["-c", "core.longpaths=true", "--git-dir", marker, "config"];
+      const bare = utf8(await command("git", [...configArgs, "--type=bool", "--default=false", "--get", "core.bare"], alias)).trim();
+      const configuredWorktree = utf8(await command("git", [...configArgs, "--default=", "--get", "core.worktree"], alias)).trim();
+      if (bare === "false" && !configuredWorktree) {
+        // Git for Windows may discover the long physical directory behind the
+        // junction and lose its work-tree association. Pin both short aliases
+        // only for an ordinary non-bare repository with its default work tree.
+        // Relative arguments keep Git from canonicalizing the junction back
+        // to an overlong physical path before its long-path setting applies.
+        queryArgs = ["--git-dir", ".git", "--work-tree", ".", ...args];
+      }
+    }
+    const result = await command("git", queryArgs, alias);
     if (!pathResult) return result;
     const text = utf8(result);
     if (!text.endsWith("\n")) throw new ScopeError("Git returned an incomplete repository path.");

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import childProcess from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   existsSync, linkSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync,
@@ -6,6 +7,7 @@ import {
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
+import { syncBuiltinESMExports } from "node:module";
 import { setTimeout as delay } from "node:timers/promises";
 import test, { type TestContext } from "node:test";
 import { BrokerOperationError, ToolBroker } from "../src/broker.js";
@@ -46,6 +48,10 @@ function fixture(t: TestContext, role: TaskRecord["role"] = "worker", writes = [
       if (cleanupExpectation.unknown) await assert.rejects(broker.close(), /unresolved process cleanup/);
       else await broker.close();
     } finally {
+      const diagnostics = store.events(run.id)
+        .filter((entry) => ["process_executor_stage", "process_executor_console", "process_executor_error"].includes(entry.type))
+        .map((entry) => ({ type: entry.type, ...entry.data as Record<string, unknown> }));
+      if (diagnostics.length) t.diagnostic(JSON.stringify({ windowsExecutor: diagnostics }));
       store.close();
       // Delete only this test's freshly allocated directory, never a derived project path.
       const target = path.resolve(directory);
@@ -61,7 +67,7 @@ async function failure(action: Promise<unknown>, state: "failed" | "unknown" = "
   try { await action; assert.fail("Expected a durable broker failure."); }
   catch (error) {
     assert.ok(error instanceof BrokerOperationError, String(error));
-    assert.equal(error.state, state);
+    assert.equal(error.state, state, `${error.message}; ${JSON.stringify(error.details)}`);
     return error;
   }
 }
@@ -458,12 +464,51 @@ test("real process output is complete on disk, bounded in the tool view, and has
     assert.equal(events.some((entry) => entry.type === "process_cleanup_started"), false);
     assert.equal(result.executorExitCode, 0);
     assert.equal(result.executorStage, "command-started");
+    const console = events.find((entry) => entry.type === "process_executor_console")!.data as any;
+    assert.equal(console.processCount, 1);
+    assert.equal(console.ownerPid, result.executorPid);
+    assert.equal(console.visible, false);
     assert.deepEqual(events.filter((entry) => entry.type === "process_executor_stage").map((entry) => (entry.data as any).stage),
       ["powershell-ready", "compiled", "native-ready", "creating-command", "assigning-job"]);
   }
   const tail = await f.invoke("read_file", { path: `artifact:${result.stdout.artifact.id}`, offset: 25_001 });
   assert.equal(tail.content, "stdout-tail");
   if (process.platform !== "win32") assert.equal(statSync(result.stdout.artifact.path).mode & 0o077, 0);
+});
+
+test("Windows helper pipes retain diagnostic tails separately from native command output", { skip: process.platform !== "win32" }, async (t) => {
+  const f = fixture(t);
+  const original = childProcess.spawn;
+  let injected = false;
+  t.mock.method(childProcess, "spawn", (...args: Parameters<typeof childProcess.spawn>) => {
+    const argv = args[1] as string[];
+    const script = argv?.[argv.indexOf("-File") + 1];
+    if (typeof script === "string" && path.basename(script) === "windows-executor.ps1") {
+      assert.equal(injected, false);
+      injected = true;
+      // Modify only this fixture's helper, before the real spawn can read it.
+      const source = readFileSync(script, "utf8");
+      writeFileSync(script, source.replace("$ErrorActionPreference = 'Stop'",
+        "$ErrorActionPreference = 'Stop'\n[Console]::Out.Write('bootstrap|')").replace("exit $code",
+        "[Console]::Out.Write(('x' * 131072) + '|stdout-tail')\n" +
+        "[Console]::Error.Write(('y' * 131072) + '|stderr-tail')\nexit $code"));
+    }
+    return original(...args);
+  });
+  syncBuiltinESMExports();
+  t.after(() => { t.mock.restoreAll(); syncBuiltinESMExports(); });
+  const result = await f.invoke("run_command", {
+    executable: process.execPath, args: ["-e", "process.stdout.write('command-out');process.stderr.write('command-err')"],
+    writes: [], timeoutSeconds: 30,
+  });
+  assert.equal(injected, true);
+  assert.equal(result.stdout.text, "command-out");
+  assert.equal(result.stderr.text, "command-err");
+  assert.equal(result.executorOutput.stdout.truncated, true);
+  assert.equal(result.executorOutput.stderr.truncated, true);
+  assert.equal(readFileSync(result.executorOutput.stdout.path, "utf8"), "bootstrap|" + "x".repeat(131072) + "|stdout-tail");
+  assert.equal(readFileSync(result.executorOutput.stderr.path, "utf8"), "y".repeat(131072) + "|stderr-tail");
+  assert.equal(result.executorExitCode, 0);
 });
 
 test("real process children receive minimal environment and argument quoting survives spaces and quotes", async (t) => {

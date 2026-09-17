@@ -82,8 +82,8 @@
     },
     {
       "path": "src/broker.ts",
-      "bytes": 79098,
-      "sha256": "f9c94ab0549cdceadd574af0044e3f985dc2bbf84d722da62f74a7ae7bc76177"
+      "bytes": 81910,
+      "sha256": "e102e3a87cc875c521e0be2c2d90049210d23248235de7d4d1793eab595a585a"
     },
     {
       "path": "src/capabilities.ts",
@@ -152,8 +152,8 @@
     },
     {
       "path": "src/verification.ts",
-      "bytes": 37190,
-      "sha256": "c3c080a0199f109f759e776f695094880b4aea8506748580093d9db5f6fc605d"
+      "bytes": 38366,
+      "sha256": "3b797b84d3bc10c524b8e0cf0b841a239213172302aeea908dbf27c4185cac99"
     },
     {
       "path": "tests/adapter.test.ts",
@@ -162,8 +162,8 @@
     },
     {
       "path": "tests/broker.test.ts",
-      "bytes": 56003,
-      "sha256": "e466b035be3d54ce66a704f5a484c19e27a99e39741ad2d1a50842751f7e0df8"
+      "bytes": 58679,
+      "sha256": "0bad22128dadd89184609fe0c1f134317f075760b51769550a12fbdeede537ea"
     },
     {
       "path": "tests/cli.test.ts",
@@ -227,8 +227,8 @@
     },
     {
       "path": "tests/verification.test.ts",
-      "bytes": 33072,
-      "sha256": "89f22fffd270bdf5a3907ad09019fb4f703be674a7a990f0afa3c71822ce7e47"
+      "bytes": 33648,
+      "sha256": "0bb6ac357e7cfa073c7e3e91258a30c74ae674cd351ad3104fa8aea6dc15f8f8"
     },
     {
       "path": "third-party/pi-0.85.1/LICENSE",

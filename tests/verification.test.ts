@@ -355,6 +355,14 @@ test("a long Git worktree root uses a temporary query bridge without changing or
       else process.env.PATH = previousPath;
     }
     assert.deepEqual((await checkCandidate(candidate)).changed, ["source:src/源 ñ.txt"]);
+    const configPath = native(path.join(longRoot, ".git", "config"));
+    const ordinaryConfig = await fs.readFile(configPath, "utf8");
+    assert.match(ordinaryConfig, /bare\s*=\s*false/);
+    try {
+      await fs.writeFile(configPath, ordinaryConfig.replace(/bare\s*=\s*false/, "bare = true"));
+      await assert.rejects(capture(longRoot, path.join(base, "bare-long-state")), /git failed|working.tree|work tree/i);
+    } finally { await fs.writeFile(configPath, ordinaryConfig); }
+    assert.deepEqual((await checkCandidate(candidate)).changed, ["source:src/源 ñ.txt"]);
   }
 });
 
