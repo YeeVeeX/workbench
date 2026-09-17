@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, realpath, rm, writeFile, link } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, realpath, writeFile, link } from "node:fs/promises";
 import { writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
@@ -17,6 +17,7 @@ import { BrokerOperationError, ToolBroker } from "../src/broker.js";
 import { Supervisor } from "../src/supervisor.js";
 import { Connectors } from "../src/mcp.js";
 import { MemoryBook } from "../src/memory.js";
+import { removeFixture } from "./fixtures.js";
 import type {
   AgentAdapter, AgentReply, AgentRequest, AgentTool, RunRecord, TaskRecord, WorkbenchConfig,
 } from "../src/contracts.js";
@@ -85,7 +86,7 @@ async function fixture(
       assert.ok(withinTemporary && withinTemporary !== ".."
         && !withinTemporary.startsWith(`..${sep}`) && !isAbsolute(withinTemporary));
       assert.equal(target, resolve(root));
-      await rm(target, { recursive: true, force: true });
+      await removeFixture(target, target);
     },
   };
 }

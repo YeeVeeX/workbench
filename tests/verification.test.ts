@@ -8,6 +8,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { test, type TestContext } from "node:test";
 import { promisify } from "node:util";
 import { checkCandidate, createCandidate, type Candidate } from "../src/verification.js";
+import { removeFixture } from "./fixtures.js";
 
 const execute = promisify(execFile);
 const native = (value: string): string => path.toNamespacedPath(value);
@@ -24,25 +25,6 @@ async function git(root: string, ...args: string[]): Promise<string> {
     cwd: native(root), env, encoding: "utf8", windowsHide: true,
   });
   return result.stdout;
-}
-
-// Cleanup checks the resolved fixture boundary before every removal and never follows links.
-async function removeFixture(target: string, boundary: string): Promise<void> {
-  const absolute = path.resolve(target);
-  const relative = path.relative(boundary, absolute);
-  assert.ok(relative === "" || (!path.isAbsolute(relative) && relative !== ".."
-    && !relative.startsWith(`..${path.sep}`)), "cleanup must stay inside its fixture");
-  const stat = await fs.lstat(native(absolute));
-  if (stat.isSymbolicLink()) {
-    await fs.unlink(native(absolute));
-  } else if (stat.isDirectory()) {
-    await fs.chmod(native(absolute), 0o700);
-    for (const name of await fs.readdir(native(absolute))) await removeFixture(path.join(absolute, name), boundary);
-    await fs.rmdir(native(absolute));
-  } else {
-    await fs.chmod(native(absolute), 0o600);
-    await fs.unlink(native(absolute));
-  }
 }
 
 async function fixture(t: TestContext, isGit = false, long = false): Promise<{ base: string; root: string; state: string }> {
@@ -307,20 +289,24 @@ test("Git subdirectory sources cannot capture their parent project", async (t) =
   assert.equal((await checkCandidate(candidate)).ok, true);
 });
 
-test("Git supports long source subdirectories and filenames through its repository root", async (t) => {
-  const { root, state } = await fixture(t, true);
-  const directories = Array.from({ length: 5 }, (_, index) => `${index} long directory 雪 ${"x".repeat(45)}`);
-  const name = [...directories, "nested space/源 ñ.txt"].join("/");
-  await put(root, name, "long-path bytes 雪");
-  await git(root, "add", "--", name);
-  const longRoot = path.join(root, ...directories);
-  const longState = path.join(state, ...directories);
-  assert.ok(longRoot.length > 260);
-  const candidate = await capture(longRoot, longState);
-  assert.deepEqual(candidate.files.map((file) => file.path), ["nested space/源 ñ.txt"]);
-  assert.equal(await fs.readFile(native(path.join(candidate.root, "nested space/源 ñ.txt")), "utf8"), "long-path bytes 雪");
-  assert.equal((await checkCandidate(candidate)).ok, true);
-});
+for (const ignoreCase of [false, true]) {
+  test(`Git supports long source subdirectories and filenames with core.ignorecase=${ignoreCase}`, async (t) => {
+    const { root, state } = await fixture(t, true);
+    const directories = Array.from({ length: 5 }, (_, index) => `${index} long directory 雪 ${"x".repeat(45)}`);
+    const name = [...directories, "nested space/源 ñ.txt"].join("/");
+    await put(root, name, "long-path bytes 雪");
+    await git(root, "add", "--", name);
+    await git(root, "config", "core.ignorecase", String(ignoreCase));
+    const longRoot = path.join(root, ...directories);
+    const longState = path.join(state, ...directories);
+    assert.ok(longRoot.length > 260);
+    const candidate = await capture(longRoot, longState);
+    assert.equal((await git(root, "config", "core.ignorecase")).trim(), String(ignoreCase));
+    assert.deepEqual(candidate.files.map((file) => file.path), ["nested space/源 ñ.txt"]);
+    assert.equal(await fs.readFile(native(path.join(candidate.root, "nested space/源 ñ.txt")), "utf8"), "long-path bytes 雪");
+    assert.equal((await checkCandidate(candidate)).ok, true);
+  });
+}
 
 test("non-Git capture supports long source and state roots", async (t) => {
   const { root, state } = await fixture(t, false, true);

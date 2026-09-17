@@ -217,7 +217,10 @@ function utf8(buffer: Buffer): string {
 }
 
 async function git(root: string, args: string[]): Promise<Buffer> {
-  const argv = ["-c", "core.longpaths=true", "-c", "core.quotepath=false", ...args];
+  // Match scopeKey/within even when a repository inherits another platform's
+  // setting. On POSIX, ignorecase=true can omit tracked long literal pathspecs.
+  const argv = ["-c", "core.longpaths=true", "-c", "core.quotepath=false",
+    "-c", `core.ignorecase=${process.platform === "win32"}`, ...args];
   try {
     return await command("git", argv, root);
   } catch (error) {

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -9,6 +9,7 @@ import { nativeDefaults as defaults } from "../src/config.js";
 import { Store } from "../src/store.js";
 import { ToolBroker } from "../src/broker.js";
 import { Supervisor } from "../src/supervisor.js";
+import { removeFixture } from "./fixtures.js";
 import type { AgentAdapter, AgentRequest, AgentReply } from "../src/contracts.js";
 
 async function call(request: AgentRequest, name: string, args: unknown) {
@@ -20,7 +21,7 @@ function reply(request: AgentRequest): AgentReply {
   return { text: "Recorded result.", stopReason: "stop", model: request.route.model, provider: request.route.provider };
 }
 async function fixture(handler: (request: AgentRequest) => Promise<AgentReply>) {
-  const root = await mkdtemp(join(tmpdir(), "workbench-supervisor-"));
+  const root = await mkdtemp(join(await realpath(tmpdir()), "workbench-supervisor-"));
   const project = join(root, "project");
   await mkdir(project);
   const config = defaults(join(root, "home"));
@@ -30,7 +31,13 @@ async function fixture(handler: (request: AgentRequest) => Promise<AgentReply>) 
   const adapter: AgentAdapter = { run: handler, doctor: async () => ({ ok: true, checks: {} }) };
   const supervisor = new Supervisor(store, broker, adapter, config);
   return { root, project, config, store, supervisor,
-    async close() { await supervisor.close(); await broker.close(); store.close(); await rm(root, { recursive: true, force: true }); } };
+    async close() {
+      await supervisor.close();
+      await broker.close();
+      store.close();
+      assert.equal(await realpath(root), root);
+      await removeFixture(root, root);
+    } };
 }
 
 test("two independent modules execute in parallel and integrated result receives a separate review", async () => {

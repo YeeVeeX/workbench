@@ -181,7 +181,12 @@ behavior and independently reviewed task acceptance as separate results.
 Missing or interrupted evidence remains unverified.
 
 The examples below use `workbench` after optional command registration; the
-same arguments work with `node dist/cli.js`. Interactive commands include
+same arguments work with `node dist/cli.js`. Starting `workbench` opens an empty
+conversation: type an objective to begin. `/resume` and `/cancel` act on that
+conversation's current run. After restarting the CLI, use `workbench status`
+to find the saved run ID, then `workbench resume <run-id>`.
+
+Interactive commands include
 `/status`, `/pause`, `/resume`, `/cancel` and
 `/new <objective>`. From another terminal, use `workbench steer <run-id> "change"`
 or `workbench resume <run-id>`. Unknown command effects need reconciliation

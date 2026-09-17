@@ -32,8 +32,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 10591,
-      "sha256": "93458d1a3d1ef1f5e395bcc053fd43daa365da8bf457460659a856feae1a9170"
+      "bytes": 10841,
+      "sha256": "8cf850535231bf66e1fc105a69760d70f7f590615536933b3539c4e4e2703b94"
     },
     {
       "path": "SECURITY.md",
@@ -152,8 +152,8 @@
     },
     {
       "path": "src/verification.ts",
-      "bytes": 36401,
-      "sha256": "2386b81b69901a06df08eb64120c5e87ca36e4090663681b641408a3e1b1e9f2"
+      "bytes": 36621,
+      "sha256": "c57e4efcee759c3871e411d51b4540cc77fb68821cea93ef8837402001d3f427"
     },
     {
       "path": "tests/adapter.test.ts",
@@ -174,6 +174,11 @@
       "path": "tests/configuration.test.ts",
       "bytes": 5822,
       "sha256": "32e2fdfa310ac37a16cb7c6dcfeea91dd56d586eb6f4062bf8b50b4caa13c8b2"
+    },
+    {
+      "path": "tests/fixtures.ts",
+      "bytes": 1053,
+      "sha256": "4c6365cee8bde38f25dc554add80664691bdd5648174cd2d37a5dbb5c3632f5e"
     },
     {
       "path": "tests/gateway.test.ts",
@@ -197,8 +202,8 @@
     },
     {
       "path": "tests/review-regressions.test.ts",
-      "bytes": 46002,
-      "sha256": "a824da62d43b762697ebd063352b1ae8247f1323c1b41f08d5ef29dc003e9ce4"
+      "bytes": 46027,
+      "sha256": "6b90585a04ffab0d50569f0bdcea3e373d4e6c6add2670e0aae71de748805687"
     },
     {
       "path": "tests/share-config.test.ts",
@@ -217,13 +222,13 @@
     },
     {
       "path": "tests/supervisor.test.ts",
-      "bytes": 16051,
-      "sha256": "3e4ec151c7b2b6f18948c62f77118c61bedc522d15b32336a9d1c2d563921a71"
+      "bytes": 16175,
+      "sha256": "9bf2dd5259dd1bada3ef8150c9b5fc96071a6cc5bb1f51db7b5b23859b8d61da"
     },
     {
       "path": "tests/verification.test.ts",
-      "bytes": 32780,
-      "sha256": "8f513d84bebcc50bc04aab300f5c8f47a85e340f9a58dbbdd0d788c4d60523f3"
+      "bytes": 32176,
+      "sha256": "6db36ce12084045bd14f322803958e4adc29c423868aadb6ef41407448a1814f"
     },
     {
       "path": "third-party/pi-0.85.1/LICENSE",
