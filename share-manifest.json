@@ -6,6 +6,11 @@
   },
   "files": [
     {
+      "path": ".gitattributes",
+      "bytes": 55,
+      "sha256": "516f8deb199b4e62ab2718b09dfd0d9e6f6d4e08abf344008f98ee917df2c4dc"
+    },
+    {
       "path": ".github/workflows/check.yml",
       "bytes": 489,
       "sha256": "2a7ecdababef81f3f34976f8417c34aa30f5238df10029aa6a869af74c39f5f8"
