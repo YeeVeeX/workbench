@@ -234,6 +234,11 @@ async function gitThroughJunction(root: string, args: string[], pathResult: bool
     throw new ScopeError("Git cannot start in this long working-tree root. "
       + "Use a shorter TEMP directory outside the working tree, or a shorter Git working-tree root.");
   }
+  const version = utf8(await command("git", ["--version"], temporaryParent)).trim();
+  if (/^git version 2\.55\.0\.windows\./i.test(version)) {
+    throw new ScopeError("Git for Windows 2.55.0 cannot safely query a work-tree root of 260 or more characters. "
+      + "Use a shorter project root. No filesystem fallback or candidate was accepted.");
+  }
   const temporary = plainPath(await fs.mkdtemp(native(path.join(temporaryParent, "workbench-git-"))));
   const directoryIdentity = await fs.lstat(native(temporary), { bigint: true });
   const alias = path.join(temporary, "root");

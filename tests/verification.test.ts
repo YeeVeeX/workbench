@@ -321,8 +321,9 @@ test("non-Git capture supports long source and state roots", async (t) => {
   assert.equal((await checkCandidate(candidate)).ok, true);
 });
 
-test("a long Git worktree root uses a temporary query bridge without changing original identities", async (t) => {
+test("a long Git worktree root uses a checked bridge or reports a known upstream limitation", async (t) => {
   const { root, state, base } = await fixture(t, true);
+  const gitVersion = (await git(root, "--version")).trim();
   await put(root, "src/源 ñ.txt", "long-root source");
   await git(root, "add", "--", ".");
   const longRoot = path.join(base, ...Array.from({ length: 5 }, (_, index) => `${index} long worktree ${"x".repeat(45)}`));
@@ -334,6 +335,15 @@ test("a long Git worktree root uses a temporary query bridge without changing or
   await fs.mkdir(native(path.dirname(longRoot)), { recursive: true });
   await fs.rename(native(root), native(longRoot));
   assert.ok(longRoot.length > 260);
+  if (process.platform === "win32" && /^git version 2\.55\.0\.windows\./i.test(gitVersion)) {
+    await assert.rejects(capture(longRoot, state), /Git for Windows 2\.55\.0.*shorter project root/);
+    assert.equal(await fs.readFile(native(path.join(longRoot, "src/源 ñ.txt")), "utf8"), "long-root source");
+    assert.deepEqual(await fs.readdir(native(state)).catch((error) => {
+      if (error.code === "ENOENT") return [];
+      throw error;
+    }), []);
+    return;
+  }
   const candidate = await capture(longRoot, state);
   assert.equal(candidate.sourceRoot, longRoot);
   const saved = await manifest(candidate);

@@ -10,6 +10,11 @@ This is an early release with limited local qualification. Installation,
 gateway access, model capabilities and completed workflows need verification
 for the particular build and machine you use.
 
+On Windows with Git 2.55.0, keep the Git project root below 260 characters.
+That Git release cannot reliably query an overlong root through a junction;
+Workbench rejects the operation instead of accepting an incomplete snapshot.
+This restriction concerns the project root, not every file path within it.
+
 ## Build from source
 
 Clone this repository and install **Node.js 24 or newer** with npm. From the

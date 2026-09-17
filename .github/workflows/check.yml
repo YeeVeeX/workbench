@@ -17,10 +17,10 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 24.21.0
           cache: npm
       - run: npm ci --ignore-scripts
-      - run: node scripts/check.mjs
+      - run: node scripts/check.mjs --serial
         env:
           # The runner context is available at step scope. Avoid Windows
           # image TEMP values containing an unsupported 8.3 alias.

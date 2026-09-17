@@ -12,8 +12,8 @@
     },
     {
       "path": ".github/workflows/check.yml",
-      "bytes": 771,
-      "sha256": "de8bcefa05690ba0aa1cd0a17748e4462001b8a7ad667e844a3ed652e2040534"
+      "bytes": 785,
+      "sha256": "ca439f2dc07a912b631b6a8cc2638af52ef7328856e077e5c3d384ddc622ec55"
     },
     {
       "path": ".gitignore",
@@ -32,8 +32,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 10905,
-      "sha256": "7cb8bb378898fd7ed084c485d13e31ec95db11244b68d96975a16d9d620e3ecc"
+      "bytes": 11207,
+      "sha256": "020947224f533d26688326788b178566f241039e975d75319becafd38dbdb69a"
     },
     {
       "path": "SECURITY.md",
@@ -57,8 +57,8 @@
     },
     {
       "path": "scripts/check.mjs",
-      "bytes": 551,
-      "sha256": "2528a6b042310730b4b1f5c7a12d7c461615e195ddbe9544e49c41d76b3aa121"
+      "bytes": 654,
+      "sha256": "0ddf6f7f5c9c508aa3d196c01cc473905c0af4c70ad86d4b8fcfe3382d522eb7"
     },
     {
       "path": "scripts/install-workbench.ps1",
@@ -152,8 +152,8 @@
     },
     {
       "path": "src/verification.ts",
-      "bytes": 38198,
-      "sha256": "d3c8c2cf16cb06fe79769e99e3381a734717d53493379e6e1f3ca776506e9787"
+      "bytes": 38551,
+      "sha256": "4415acd3ad1538113e17accdf4a37f0cef7cc395b7fa1a019d63c7ee56696b8c"
     },
     {
       "path": "tests/adapter.test.ts",
@@ -227,8 +227,8 @@
     },
     {
       "path": "tests/verification.test.ts",
-      "bytes": 33648,
-      "sha256": "0bb6ac357e7cfa073c7e3e91258a30c74ae674cd351ad3104fa8aea6dc15f8f8"
+      "bytes": 34176,
+      "sha256": "af137f5d4ec4ee05775503ffa7ac47b9152f72931d6a575914d30a5cd450d384"
     },
     {
       "path": "third-party/pi-0.85.1/LICENSE",
