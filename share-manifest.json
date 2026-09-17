@@ -82,8 +82,8 @@
     },
     {
       "path": "src/broker.ts",
-      "bytes": 81910,
-      "sha256": "e102e3a87cc875c521e0be2c2d90049210d23248235de7d4d1793eab595a585a"
+      "bytes": 82267,
+      "sha256": "d80dc8079e4dece1b4025ae77a86b00496aa6b956b7f372e72459be4767f6383"
     },
     {
       "path": "src/capabilities.ts",
@@ -152,8 +152,8 @@
     },
     {
       "path": "src/verification.ts",
-      "bytes": 38366,
-      "sha256": "3b797b84d3bc10c524b8e0cf0b841a239213172302aeea908dbf27c4185cac99"
+      "bytes": 38198,
+      "sha256": "d3c8c2cf16cb06fe79769e99e3381a734717d53493379e6e1f3ca776506e9787"
     },
     {
       "path": "tests/adapter.test.ts",
@@ -162,8 +162,8 @@
     },
     {
       "path": "tests/broker.test.ts",
-      "bytes": 58679,
-      "sha256": "0bad22128dadd89184609fe0c1f134317f075760b51769550a12fbdeede537ea"
+      "bytes": 58835,
+      "sha256": "c570448d38641e64e4a94f1d14a521e6f122e3ca0eaeb89860801be9a8e94d15"
     },
     {
       "path": "tests/cli.test.ts",

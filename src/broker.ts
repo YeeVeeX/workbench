@@ -623,10 +623,14 @@ async function windowsProcess(
   try {
     err = openSync(executorStderr, "wx", 0o600);
     const powershell = path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+    // This helper uses only Windows' built-in cmdlets. Avoid discovery through
+    // user/third-party module inventories (large on hosted Windows machines).
+    // The actual command still receives the original minimal environment.
+    const helperEnvironment = { ...env, PSModulePath: path.join(path.dirname(powershell), "Modules") };
     child = spawn(powershell, ["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", script, "-RequestPath", request], {
       // libuv suppresses CREATE_NO_WINDOW if ANY stdio entry is UV_INHERIT_FD.
       // Pipes ensure this helper owns a hidden console regardless of its caller.
-      cwd, env, shell: false, windowsHide: true, stdio: ["ignore", "pipe", "pipe"],
+      cwd, env: helperEnvironment, shell: false, windowsHide: true, stdio: ["ignore", "pipe", "pipe"],
     });
   } catch (error) {
     closeSync(out);

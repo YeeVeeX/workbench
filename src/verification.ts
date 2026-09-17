@@ -220,19 +220,12 @@ async function git(root: string, args: string[]): Promise<Buffer> {
   // Match scopeKey/within even when a repository inherits another platform's setting.
   const argv = ["-c", "core.longpaths=true", "-c", "core.quotepath=false",
     "-c", `core.ignorecase=${process.platform === "win32"}`, ...args];
-  try {
-    return await command("git", argv, root);
-  } catch (error) {
-    const code = (error as NodeJS.ErrnoException).code;
-    if (process.platform === "win32" && root.length >= 260
-      && error instanceof Error
-      && (code === "ENOENT" || code === "ENAMETOOLONG" || /filename too long/i.test(error.message))) {
-      // Windows/libuv can report a long current directory as spawn ENOENT,
-      // even when Git exists. The short bridge still fails if Git is absent.
-      return gitThroughJunction(root, argv, args[0] === "rev-parse");
-    }
-    throw error;
-  }
+  // Windows/libuv and Git versions report several different failures for an
+  // overlong cwd, including ENOENT and misidentifying a valid work tree as bare.
+  // Use the checked short bridge before launching instead of guessing from errors.
+  if (process.platform === "win32" && root.length >= 260)
+    return gitThroughJunction(root, argv, args[0] === "rev-parse");
+  return command("git", argv, root);
 }
 
 async function gitThroughJunction(root: string, args: string[], pathResult: boolean): Promise<Buffer> {

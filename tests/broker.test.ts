@@ -477,7 +477,6 @@ test("real process output is complete on disk, bounded in the tool view, and has
 });
 
 test("Windows helper pipes retain diagnostic tails separately from native command output", { skip: process.platform !== "win32" }, async (t) => {
-  const f = fixture(t);
   const original = childProcess.spawn;
   let injected = false;
   t.mock.method(childProcess, "spawn", (...args: Parameters<typeof childProcess.spawn>) => {
@@ -496,7 +495,10 @@ test("Windows helper pipes retain diagnostic tails separately from native comman
     return original(...args);
   });
   syncBuiltinESMExports();
+  // Restore the shared builtin before fixture teardown; teardown can itself
+  // fail after a timeout and must not leave a mock installed for later tests.
   t.after(() => { t.mock.restoreAll(); syncBuiltinESMExports(); });
+  const f = fixture(t);
   const result = await f.invoke("run_command", {
     executable: process.execPath, args: ["-e", "process.stdout.write('command-out');process.stderr.write('command-err')"],
     writes: [], timeoutSeconds: 30,
