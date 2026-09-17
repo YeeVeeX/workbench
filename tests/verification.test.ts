@@ -344,6 +344,18 @@ test("a long Git worktree root uses a temporary query bridge without changing or
   assert.deepEqual(await checkCandidate(candidate), { ok: true, changed: [] });
   await put(longRoot, "src/源 ñ.txt", "changed");
   assert.deepEqual((await checkCandidate(candidate)).changed, ["source:src/源 ñ.txt"]);
+  if (process.platform === "win32") {
+    const previousPath = process.env.PATH;
+    try {
+      const system = process.env.SystemRoot || "C:\\Windows";
+      process.env.PATH = [base, path.join(system, "System32"), path.join(system, "System32", "WindowsPowerShell", "v1.0")].join(";");
+      await assert.rejects(capture(longRoot, path.join(base, "git-unavailable-state")), /spawn git ENOENT/);
+    } finally {
+      if (previousPath === undefined) delete process.env.PATH;
+      else process.env.PATH = previousPath;
+    }
+    assert.deepEqual((await checkCandidate(candidate)).changed, ["source:src/源 ñ.txt"]);
+  }
 });
 
 test("relocated Git administrative metadata is excluded even inside the source tree", async (t) => {

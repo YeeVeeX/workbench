@@ -449,6 +449,18 @@ test("real process output is complete on disk, bounded in the tool view, and has
   const cleaned = events.findIndex((entry) => entry.type === "process_cleanup_finished");
   const succeeded = events.findIndex((entry) => entry.type === "operation.updated" && (entry.data as any).state === "succeeded");
   assert.ok(spawned >= 0 && exited > spawned && cleaned > exited && succeeded > cleaned);
+  if (process.platform === "win32") {
+    // A redirected Node command must not acquire a hidden conhost process that
+    // can outlive the command and masquerade as a user-created descendant.
+    const cleanup = events[cleaned].data as any;
+    assert.equal(cleanup.totalProcesses, 1);
+    assert.equal(cleanup.activeProcesses, 0);
+    assert.equal(events.some((entry) => entry.type === "process_cleanup_started"), false);
+    assert.equal(result.executorExitCode, 0);
+    assert.equal(result.executorStage, "command-started");
+    assert.deepEqual(events.filter((entry) => entry.type === "process_executor_stage").map((entry) => (entry.data as any).stage),
+      ["powershell-ready", "compiled", "native-ready", "creating-command", "assigning-job"]);
+  }
   const tail = await f.invoke("read_file", { path: `artifact:${result.stdout.artifact.id}`, offset: 25_001 });
   assert.equal(tail.content, "stdout-tail");
   if (process.platform !== "win32") assert.equal(statSync(result.stdout.artifact.path).mode & 0o077, 0);
@@ -499,7 +511,7 @@ test("AbortSignal kills the owned process tree, retains output, and confirms cle
   const descendant = "process.on('SIGTERM',()=>{});setInterval(()=>{},1000)";
   const command = [
     "const fs=require('fs'),cp=require('child_process');",
-    `const child=cp.spawn(process.execPath,['-e',${JSON.stringify(descendant)}],{stdio:'ignore'});`,
+    `const child=cp.spawn(process.execPath,['-e',${JSON.stringify(descendant)}],{stdio:'ignore',windowsHide:true});`,
     `fs.writeFileSync(${JSON.stringify(childPidFile)},String(child.pid));`,
     "process.stdout.write('before-abort\\n');",
     `fs.writeFileSync(${JSON.stringify(ready)},'ready');`,
@@ -534,7 +546,7 @@ test("a parent that exits leaving descendants is cleaned and cannot report succe
   const childPidFile = path.join(f.root, "owned", "orphan-pid.txt");
   const command = [
     "const cp=require('child_process'),fs=require('fs');",
-    "const child=cp.spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{stdio:'ignore',detached:process.platform==='win32'});",
+    "const child=cp.spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{stdio:'ignore',windowsHide:true,detached:process.platform==='win32'});",
     `fs.writeFileSync(${JSON.stringify(childPidFile)},String(child.pid));`,
     "child.unref();",
   ].join("");
@@ -542,6 +554,13 @@ test("a parent that exits leaving descendants is cleaned and cannot report succe
     executable: process.execPath, args: ["-e", command], writes: ["owned"], timeoutSeconds: 30,
   }));
   assert.equal(result.details.cleanup, "confirmed");
+  assert.match(result.message, /live.descendants/);
+  assert.equal(result.details.exitCode, 0);
+  if (process.platform === "win32") {
+    const cleanup = f.store.events(f.run.id).find((entry) => entry.type === "process_cleanup_finished")!.data as any;
+    assert.ok(cleanup.totalProcesses >= 2);
+    assert.equal(cleanup.activeProcesses, 0);
+  }
   const childPid = Number(readFileSync(childPidFile, "utf8"));
   assert.throws(() => process.kill(childPid, 0), (error: any) => error.code === "ESRCH");
 });

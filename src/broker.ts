@@ -310,6 +310,9 @@ async function requestOnce(
 interface ProcessResult {
   pid?: number;
   executorPid?: number;
+  executorExitCode?: number | null;
+  executorStage?: string;
+  executorStageTimesMs?: Record<string, number>;
   exitCode: number | null;
   exitSignal?: string | null;
   cleanup: "confirmed" | "unknown";
@@ -389,6 +392,17 @@ async function unixProcess(
 // This static helper is saved beside the operation evidence for inspection.
 const WINDOWS_EXECUTOR = String.raw`param([Parameter(Mandatory=$true)][string]$RequestPath)
 $ErrorActionPreference = 'Stop'
+$request = Get-Content -LiteralPath $RequestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+function Write-ExecutorStage([string]$stage) {
+  $json = '{"type":"process_executor_stage","stage":"' + $stage + '"}' + [Environment]::NewLine
+  $stream = [IO.File]::Open($request.lifecycle, [IO.FileMode]::Append, [IO.FileAccess]::Write, [IO.FileShare]::ReadWrite)
+  try {
+    $bytes = [Text.Encoding]::UTF8.GetBytes($json)
+    $stream.Write($bytes, 0, $bytes.Length)
+    $stream.Flush($true)
+  } finally { $stream.Dispose() }
+}
+Write-ExecutorStage 'powershell-ready'
 Add-Type -TypeDefinition @'
 using System;
 using System.IO;
@@ -424,6 +438,9 @@ public static class WorkbenchJob {
   [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)] static extern bool CreateProcess(string exe, StringBuilder command, IntPtr psa, IntPtr tsa, bool inherit, uint flags, IntPtr env, string cwd, ref SI startup, out PI pi);
   [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)] static extern IntPtr CreateFile(string name, uint access, uint share, ref SA sa, uint disposition, uint flags, IntPtr template);
   [DllImport("kernel32.dll", SetLastError=true)] static extern IntPtr OpenProcess(uint access, bool inherit, int pid);
+  [DllImport("kernel32.dll")] static extern uint GetConsoleCP();
+  [DllImport("kernel32.dll")] static extern IntPtr GetConsoleWindow();
+  [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr window);
   [DllImport("kernel32.dll")] static extern uint WaitForSingleObject(IntPtr handle, uint ms);
   [DllImport("kernel32.dll")] static extern bool GetExitCodeProcess(IntPtr process, out uint code);
   [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr handle);
@@ -437,10 +454,11 @@ public static class WorkbenchJob {
     }
     b.Append('\\', slash * 2); return b.Append('"').ToString();
   }
-  static uint Active(IntPtr job) {
+  static ACCOUNTING Accounting(IntPtr job) {
     ACCOUNTING a; Check(QueryInformationJobObject(job, 1, out a, (uint)Marshal.SizeOf(typeof(ACCOUNTING)), IntPtr.Zero));
-    return a.active;
+    return a;
   }
+  static uint Active(IntPtr job) { return Accounting(job).active; }
   static void Record(string file, string json) {
     using (FileStream stream = new FileStream(file, FileMode.Append, FileAccess.Write, FileShare.ReadWrite)) {
       byte[] data = Encoding.UTF8.GetBytes(json + "\n"); stream.Write(data, 0, data.Length); stream.Flush(true);
@@ -449,7 +467,9 @@ public static class WorkbenchJob {
   public static int Run(string exe, string[] args, string cwd, string output, string error, string log, string cancel, int parentPid, string[] environment) {
     IntPtr job = IntPtr.Zero, parent = IntPtr.Zero, outHandle = IntPtr.Zero, errHandle = IntPtr.Zero, input = IntPtr.Zero, env = IntPtr.Zero;
     PI pi = new PI(); bool assigned = false, clean = false; string reason = ""; uint exitCode = 1;
+    uint totalProcesses = 0, activeProcesses = 0;
     try {
+      Record(log, "{\"type\":\"process_executor_stage\",\"stage\":\"native-ready\"}");
       parent = OpenProcess(0x00100000, false, parentPid); Check(parent != IntPtr.Zero);
       if (File.Exists(cancel) || WaitForSingleObject(parent, 0) == 0) { reason = "aborted"; clean = true; return 1; }
       job = CreateJobObject(IntPtr.Zero, null); Check(job != IntPtr.Zero);
@@ -460,12 +480,20 @@ public static class WorkbenchJob {
       errHandle = CreateFile(error, 0x40000000, 7, ref sa, 3, 0x80, IntPtr.Zero);
       input = CreateFile("NUL", 0x80000000, 7, ref sa, 3, 0x80, IntPtr.Zero);
       Check(outHandle != new IntPtr(-1) && errHandle != new IntPtr(-1) && input != new IntPtr(-1));
-      SI si = new SI(); si.cb = Marshal.SizeOf(typeof(SI)); si.flags = 0x100;
+      SI si = new SI(); si.cb = Marshal.SizeOf(typeof(SI)); si.flags = 0x101; si.show = 0;
       si.stdin = input; si.stdout = outHandle; si.stderr = errHandle;
       StringBuilder command = new StringBuilder(Quote(exe));
       foreach (string arg in args) command.Append(" ").Append(Quote(arg));
       env = Marshal.StringToHGlobalUni(String.Join("\0", environment) + "\0\0");
-      Check(CreateProcess(exe, command, IntPtr.Zero, IntPtr.Zero, true, 0x08000404, env, cwd, ref si, out pi));
+      // Inherit the helper's hidden console: CREATE_NO_WINDOW allocates another
+      // conhost that can outlive an echo; DETACHED_PROCESS lets nested npm/cmd
+      // launches allocate a visible console. The helper owns the existing console
+      // outside this job. Every command descendant still belongs to the job.
+      if (GetConsoleCP() == 0 || IsWindowVisible(GetConsoleWindow()))
+        throw new InvalidOperationException("Executor requires a hidden console to inherit.");
+      Record(log, "{\"type\":\"process_executor_stage\",\"stage\":\"creating-command\"}");
+      Check(CreateProcess(exe, command, IntPtr.Zero, IntPtr.Zero, true, 0x00000404, env, cwd, ref si, out pi));
+      Record(log, "{\"type\":\"process_executor_stage\",\"stage\":\"assigning-job\"}");
       Check(AssignProcessToJobObject(job, pi.process)); assigned = true;
       Record(log, "{\"type\":\"process_spawned\",\"pid\":" + pi.pid + ",\"platform\":\"windows-job\"}");
       Check(ResumeThread(pi.thread) != 0xFFFFFFFF);
@@ -504,16 +532,20 @@ public static class WorkbenchJob {
       }
       return 1;
     } finally {
+      if (job != IntPtr.Zero) {
+        try { ACCOUNTING a = Accounting(job); totalProcesses = a.total; activeProcesses = a.active; clean = clean && a.active == 0; }
+        catch { clean = false; }
+      }
       if (job != IntPtr.Zero) CloseHandle(job);
       foreach (IntPtr handle in new IntPtr[] {pi.thread, pi.process, parent, outHandle, errHandle, input})
         if (handle != IntPtr.Zero && handle != new IntPtr(-1)) CloseHandle(handle);
       if (env != IntPtr.Zero) Marshal.FreeHGlobal(env);
-      Record(log, "{\"type\":\"process_cleanup_finished\",\"pid\":" + pi.pid + ",\"cleanup\":\"" + (clean ? "confirmed" : "unknown") + "\",\"reason\":\"" + reason + "\",\"exitCode\":" + exitCode + "}");
+      Record(log, "{\"type\":\"process_cleanup_finished\",\"pid\":" + pi.pid + ",\"cleanup\":\"" + (clean ? "confirmed" : "unknown") + "\",\"reason\":\"" + reason + "\",\"exitCode\":" + exitCode + ",\"totalProcesses\":" + totalProcesses + ",\"activeProcesses\":" + activeProcesses + "}");
     }
   }
 }
 '@
-$request = Get-Content -LiteralPath $RequestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+Write-ExecutorStage 'compiled'
 $entries = @($request.environment.PSObject.Properties | Sort-Object Name | ForEach-Object { $_.Name + '=' + [string]$_.Value })
 $code = [WorkbenchJob]::Run($request.executable, [string[]]$request.args, $request.cwd, $request.stdout, $request.stderr, $request.lifecycle, $request.cancel, $request.parentPid, [string[]]$entries)
 exit $code
@@ -586,9 +618,11 @@ async function windowsProcess(
   let seen = 0;
   let stopAt: number | undefined;
   let ledgerError: unknown;
-  let result: ProcessResult = { executorPid: child.pid, exitCode: null, cleanup: "unknown", ...(launcher ? { launcher } : {}) };
+  const began = Date.now();
+  const executorStageTimesMs: Record<string, number> = {};
+  let result: ProcessResult = { executorPid: child.pid, executorStage: "starting-powershell", executorStageTimesMs, exitCode: null, cleanup: "unknown", ...(launcher ? { launcher } : {}) };
   child.once("error", () => { exited = true; result.reason = "Windows executor could not start."; result.cleanup = "confirmed"; });
-  child.once("exit", () => { exited = true; });
+  child.once("exit", (code) => { exited = true; result.executorExitCode = code; });
   const emit: ProcessEvent = (type, data) => { try { event(type, data); } catch (error) { ledgerError = error; } };
   emit("process_executor_started", { executorPid: child.pid, platform: "windows-job" });
   const readLifecycle = (): void => {
@@ -597,7 +631,12 @@ async function windowsProcess(
       const data = JSON.parse(lines[seen++]) as Details;
       const type = String(data.type);
       delete data.type;
-      if (type === "process_spawned") result.pid = Number(data.pid);
+      if (type === "process_executor_stage") {
+        result.executorStage = String(data.stage);
+        data.observedElapsedMs = Date.now() - began;
+        executorStageTimesMs[result.executorStage] = Number(data.observedElapsedMs);
+      }
+      if (type === "process_spawned") { result.pid = Number(data.pid); result.executorStage = "command-started"; }
       if (type === "process_cleanup_finished") {
         result = { ...result, exitCode: Number(data.exitCode), cleanup: data.cleanup === "confirmed" ? "confirmed" : "unknown", reason: data.reason ? String(data.reason) : undefined };
       }
