@@ -18,17 +18,15 @@ Requires Node.js 24 or newer.
 - Optional Windows command: `powershell -File scripts/share-install.ps1`
 - Transactional Windows installer: `powershell -File scripts/install-workbench.ps1`
 
-Source ZIPs need Node.js 24+, npm dependencies and a build. `share-install.ps1`
-registers launchers to the final extracted/built location, without downloads or
+This checkout needs Node.js 24+, npm dependencies and a build. `share-install.ps1`
+registers launchers to the final built location, without downloads or
 configuration changes. It refuses an existing `.ps1` or `.cmd`; use
-`-CommandName workbench-junior` to coexist and `-AddToPath` only when explicitly
-selected. Moving the package breaks registered launchers.
+`-CommandName workbench-local` to coexist and `-AddToPath` only when explicitly
+selected. Moving the checkout breaks registered launchers.
 The transactional installer requires a clean Git checkout.
 
-The Windows x64 runtime format bundles Node.js 24.21.0 and production
-dependencies. It needs no separate Node/npm installation. Verify its manifest
-and entrypoint; assembled-runtime tests remain pending. Preserve the full
-official Node license. Do not infer other-platform support from this bundle.
+This repository distributes source. If building a separate binary distribution,
+verify its manifest, entrypoint, platform behavior and dependency notices.
 Inspect live-check scripts and their target routes before using them; real
 model calls and connector access are separate from the ordinary test gate.
 Keep failed evidence. Do not require a maintainer's private Swarm Forge path
@@ -88,8 +86,8 @@ actual contents. Include binaries or dependencies only with recorded packaging
 tests for their OS and architecture and their required notices. Do not claim
 offline or new-PC support without the corresponding installation proof.
 
-The proposed MIT license covers Workbench contributors' original work after
-the maintainer adopts it. Dependencies retain their own licenses. Check
+The MIT license covers Workbench contributors' original work.
+Dependencies retain their own licenses. Check
 `package-lock.json`, installed package metadata and the license/notice texts
 for the exact distributed versions; missing text or metadata needs resolution.
 Do not infer a package's license from another package's name or publisher.

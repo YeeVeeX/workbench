@@ -1,6 +1,6 @@
 # Third-party notices
 
-The proposed Workbench MIT license applies to Workbench contributors' original
+The Workbench MIT license applies to Workbench contributors' original
 work. Dependencies, bundled runtimes and other third-party material retain
 their own copyright notices and license terms. This document does not replace
 those texts or grant rights to material whose license is unresolved.
@@ -63,7 +63,7 @@ Each exact-revision package manifest declares MIT. The unchanged license text
 states **Copyright (c) 2025 Mario Zechner**.
 
 Redistribute the [exact upstream license](https://raw.githubusercontent.com/earendil-works/pi/d981de1229ef899957bbe968bc8dcda02a21f477/LICENSE)
-with these packages. The Windows runtime places the saved copy at
+with these packages. This repository includes the saved copy at
 `third-party/pi-0.85.1/LICENSE` and its verification record at
 `third-party/provenance.json`. Preserve both with the package.
 The 1,069-byte license has SHA-256:
@@ -75,9 +75,8 @@ The 1,069-byte license has SHA-256:
 Provenance records the immutable source URL, npm metadata, matching release
 tag/commit, source manifests and checks of eight installed package copies.
 Five nested lockfile entries initially lacked integrity fields; they now pin
-the verified npm archive hashes. The runtime also includes
-`third-party/pi-installed-provenance.json`, recording 1,413 package-owned files
-matched against those archives with zero mismatches. No requested Pi license
+the verified npm archive hashes. Verification matched 1,413 package-owned files
+against those archives with zero mismatches. No requested Pi license
 text remains unresolved. Other third-party notices still apply.
 
 For other packages, resolve missing or conflicting information against an
@@ -92,12 +91,11 @@ components, retain their own license and third-party notices and record their
 versions, platform and origin. Include development dependencies in the
 inventory if the archive ships them.
 
-The Windows x64 runtime selects official Node.js 24.21.0. Preserve its entire
-official `LICENSE`, including its bundled third-party notices, and all original
-license texts shipped with production npm dependencies. Resolving the Pi
-license does not establish that the final archive contains every required
-notice. Assembled-runtime tests remain pending; this record does not establish
-offline installation, another OS/architecture or operation on a new PC.
+This repository distributes source and does not bundle a Node executable.
+If redistributing Node, preserve its entire official `LICENSE`, including its
+third-party notices, and all original license texts shipped with production
+npm dependencies. Verify the actual distribution and its supported platforms;
+the source repository's checks do not establish new-PC or offline operation.
 
 ## Design references
 

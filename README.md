@@ -12,8 +12,8 @@ for the particular build and machine you use.
 
 ## Build from source
 
-Source ZIPs and checkouts require **Node.js 24 or newer** and npm. From the
-source root:
+Clone this repository and install **Node.js 24 or newer** with npm. From the
+repository root:
 
 ```powershell
 npm ci --ignore-scripts
@@ -28,7 +28,7 @@ Dependency installation needs network access or an already populated cache;
 `--ignore-scripts` does not make dependency code safe to execute.
 
 Run the built CLI with `node dist/cli.js`. To register an optional Windows
-command for this extracted and built folder:
+command for this built checkout:
 
 ```powershell
 powershell -File scripts/share-install.ps1
@@ -36,27 +36,20 @@ powershell -File scripts/share-install.ps1
 
 This script registers launchers without downloads or configuration changes.
 It refuses an existing `.ps1` or `.cmd` for the selected name. Choose a different
-`-CommandName`, such as `workbench-junior`, to coexist with another installation.
+`-CommandName`, such as `workbench-local`, to coexist with another installation.
 Add `-AddToPath` explicitly if you want its command directory added to your
 user PATH, then open a fresh terminal. The default launcher directory is
 `%USERPROFILE%\.local\bin`.
 
-Keep the extracted or built folder in its final location before registration:
+Keep the checkout in its final location before registration:
 moving it breaks the registered launchers. Registering a command does not
 establish a working model route or completed task. Stock Pi and other assistants
 keep their own configuration.
 
 The separate transactional Windows installer,
-`powershell -File scripts/install-workbench.ps1`, requires a Git checkout.
-Use `share-install.ps1` for optional registration from a source ZIP.
-
-The Windows x64 runtime format bundles official Node.js 24.21.0, the built
-application and production dependencies. It requires no separate Node or npm
-installation. Start it with `./workbench.cmd --help` in the extracted folder;
-the launcher selects the bundled Node. Keep the complete official Node license
-and dependency notices with the package. Runtime tests after assembly are
-pending; neither the runtime version nor the ZIP format proves new-PC operation
-or support for another OS/architecture.
+`powershell -File scripts/install-workbench.ps1`, prepares and activates a
+separate runtime from this Git checkout. It preserves previous generations
+for rollback.
 
 ## Configure your own gateway
 
@@ -221,7 +214,6 @@ code, uploading artifacts or changing an external account. Make any such
 authorization explicit and scoped. See [SECURITY.md](SECURITY.md) for the trust
 boundary and handling of secrets and task data.
 
-The proposed Workbench license is [MIT](LICENSE), copyright Workbench
-contributors. Its adoption and publication require final maintainer action.
+Workbench is licensed under [MIT](LICENSE), copyright Workbench contributors.
 Dependencies retain their own terms; see
 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
