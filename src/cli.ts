@@ -96,7 +96,7 @@ function formatStatus(value: any): string {
 export async function main(argv = process.argv.slice(2)): Promise<number> {
   const { args, opts } = parse(argv);
   if (opts.help) { console.log(help); return 0; }
-  if (opts.version) { console.log("workbench 0.2.0"); return 0; }
+  if (opts.version) { console.log("workbench 0.2.1"); return 0; }
   if (opts.home) process.env.WORKBENCH_HOME = resolve(String(opts.home));
   const root = homeDir();
   const config = loadConfig(root);
@@ -154,7 +154,7 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
           connectorChecks = { error: error instanceof Error ? error.message : String(error) };
         } finally { await connectors.close(); }
         print({ ...result, ok: result.ok && connectorsOk, connectors: connectorChecks,
-          version: "0.2.0", node: process.version, root, stateDir: config.stateDir,
+          version: "0.2.1", node: process.version, root, stateDir: config.stateDir,
           execution: config.execution, maxWorkers: config.maxWorkers, sqlite: true,
           inference: "not run", stockPiModified: false });
         return result.ok && connectorsOk ? 0 : 2;
@@ -275,7 +275,9 @@ export async function interactive(
   let resumeAfterApproval = false;
   let closing = false;
   rl.once("close", () => { closing = true; resumeAfterApproval = false; });
-  print("Workbench. Describe the result you want. /status /pause /resume /cancel /approvals /approve <id> /quit");
+  print("Workbench — text prompt. Type a goal after > and press Enter to start.");
+  print("Example goal: Summarize the documents in this folder.");
+  print("Run controls: /status /pause /resume /cancel /approvals /approve <id>. /quit exits.");
   rl.setPrompt("> "); rl.prompt();
   const launch = (id: string) => {
     active = supervisor.execute(id).then(() => {
@@ -305,7 +307,7 @@ export async function interactive(
     if (line === "/status") {
       print(current ? formatStatus({ run: publicRun(store.getRun(current.id)), tasks: store.tasks(current.id),
         operations: store.operations(current.id).filter((operation) => ["running", "unknown"].includes(operation.state)),
-        approvals: store.approvals(current.id).filter((approval) => approval.state === "pending") }) : "No run yet.");
+        approvals: store.approvals(current.id).filter((approval) => approval.state === "pending") }) : "No task in this conversation. Type a goal to start.");
     } else if (line.startsWith("/new ")) {
       resumeAfterApproval = false;
       if (active && run) {
@@ -316,7 +318,7 @@ export async function interactive(
       print(`Run ${current.id}`);
       launch(current.id);
     } else if (line === "/approvals") {
-      print(current ? store.approvals(current.id) : "No run yet.");
+      print(current ? store.approvals(current.id) : "No task in this conversation. Type a goal to start.");
     } else if (line.startsWith("/approve ") || line.startsWith("/reject ")) {
       const approved = line.startsWith("/approve ");
       const id = line.slice(approved ? 9 : 8).trim();
@@ -330,14 +332,14 @@ export async function interactive(
       } catch (error) { print(error instanceof Error ? error.message : String(error)); }
     } else if (line === "/pause" || line === "/cancel") {
       resumeAfterApproval = false;
-      if (!run) print("No active work.");
+      if (!run) print("No task is running. Type a goal to start one.");
       else if (["accepted", "canceled"].includes(run.state)) print(`Run is ${run.state}. Start a new run.`);
       else {
         store.updateRun(run.id, { state: line === "/pause" ? "paused" : "canceled" });
         print(line === "/pause" ? "Pause requested." : "Cancel requested; evidence retained.");
       }
     } else if (line === "/resume") {
-      if (!run) print("No run to resume.");
+      if (!run) print("No task in this conversation. Type a goal to start. For saved work, use workbench status and workbench resume <run-id>.");
       else if (["accepted", "canceled"].includes(run.state)) print(`Run is ${run.state}. Start a new run.`);
       else if (active) print("Work is already active.");
       else launch(run.id);

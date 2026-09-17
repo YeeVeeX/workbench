@@ -181,8 +181,9 @@ behavior and independently reviewed task acceptance as separate results.
 Missing or interrupted evidence remains unverified.
 
 The examples below use `workbench` after optional command registration; the
-same arguments work with `node dist/cli.js`. Starting `workbench` opens an empty
-conversation: type an objective to begin. `/resume` and `/cancel` act on that
+same arguments work with `node dist/cli.js`. Workbench uses a simple text prompt.
+Starting `workbench` opens an empty conversation: type a goal after `>` and
+press Enter to start a task. `/resume` and `/cancel` act on that
 conversation's current run. After restarting the CLI, use `workbench status`
 to find the saved run ID, then `workbench resume <run-id>`.
 

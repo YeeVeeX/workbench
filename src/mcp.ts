@@ -32,7 +32,7 @@ export class Connectors {
       if (process.env[key]) env[key] = process.env[key]!;
     }
     Object.assign(env, spec.env || {});
-    const client = new Client({ name: "workbench", version: "0.2.0" });
+    const client = new Client({ name: "workbench", version: "0.2.1" });
     try {
       const transport = spec.url
         ? new StreamableHTTPClientTransport(validateGatewayEndpoint(spec.url, spec.allowPrivateHttp), {

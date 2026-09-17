@@ -83,6 +83,20 @@ function snapshot(store: Store, id: string) {
   };
 }
 
+test("an empty prompt explains goal entry and controls do not start work", async (t) => {
+  const f = fixture(t);
+  assert.match(f.text(), /text prompt\. Type a goal after > and press Enter to start/);
+  assert.match(f.text(), /Example goal:/);
+  for (const command of ["/resume", "/cancel", "/status"]) await f.send(command);
+  assert.equal(f.store.listRuns().length, 0);
+  assert.equal(f.executions.length, 0);
+  assert.match(f.text(), /No task is running\. Type a goal to start one/);
+  assert.match(f.text(), /For saved work, use workbench status and workbench resume <run-id>/);
+  await f.send("Create a summary of the documents in this folder.");
+  assert.equal(f.executions.length, 1);
+  assert.equal(f.store.listRuns()[0].objective, "Create a summary of the documents in this folder.");
+});
+
 function approval(store: Store, id: string) {
   return store.createApproval(id, store.tasks(id)[0].id, {
     method: "POST", url: "https://example.invalid/records", body: "saved exact action",

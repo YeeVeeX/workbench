@@ -1,6 +1,6 @@
 {
   "name": "workbench-agent-harness",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "description": "A durable, general-purpose agent supervisor with scoped parallel workers.",

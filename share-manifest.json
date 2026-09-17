@@ -2,7 +2,7 @@
   "format": "workbench.share-source/1",
   "package": {
     "name": "workbench-agent-harness",
-    "version": "0.2.0"
+    "version": "0.2.1"
   },
   "files": [
     {
@@ -12,8 +12,8 @@
     },
     {
       "path": ".github/workflows/check.yml",
-      "bytes": 489,
-      "sha256": "2a7ecdababef81f3f34976f8417c34aa30f5238df10029aa6a869af74c39f5f8"
+      "bytes": 512,
+      "sha256": "45801c486031e1ff14bfbd3b33cd8d96cf083e401bc1571d31bb4b431521cff1"
     },
     {
       "path": ".gitignore",
@@ -32,8 +32,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 10841,
-      "sha256": "8cf850535231bf66e1fc105a69760d70f7f590615536933b3539c4e4e2703b94"
+      "bytes": 10905,
+      "sha256": "7cb8bb378898fd7ed084c485d13e31ec95db11244b68d96975a16d9d620e3ecc"
     },
     {
       "path": "SECURITY.md",
@@ -48,12 +48,12 @@
     {
       "path": "package-lock.json",
       "bytes": 192247,
-      "sha256": "797e8bab17f7af65a450ed1a8827429e051a2928124241cd513d542c9edaaafb"
+      "sha256": "69c1ee81d836e1afa536183bed7fe571450fad2adf73cc23802cf338bf1ee9e5"
     },
     {
       "path": "package.json",
       "bytes": 957,
-      "sha256": "6e8363f705ad9f1332bb6b8297549f7ec6b547807b4d7bd7f21747abe4c70715"
+      "sha256": "aec6658fa14d0cb6b5d1a240ad3b18c377f75b241ec451d98e7e3f54e5232b41"
     },
     {
       "path": "scripts/check.mjs",
@@ -97,8 +97,8 @@
     },
     {
       "path": "src/cli.ts",
-      "bytes": 20392,
-      "sha256": "d64b82e1a490a95a200083030a4ddd99d5c47d64b517b9106b79e140f1b1c871"
+      "bytes": 20736,
+      "sha256": "331ae59f18e538ff7ce0dfdc36f5427b64bd60f0c1d748a3d1d67932de63db70"
     },
     {
       "path": "src/config.ts",
@@ -118,7 +118,7 @@
     {
       "path": "src/mcp.ts",
       "bytes": 6118,
-      "sha256": "e4141aaa03523aedbbdb93b22cf61c5db43b2d21d00284a167eac51aed22865a"
+      "sha256": "eba0e56330e6e7d483b9628fce2d20ff85a0bd9dad6d943ccd828dc508d2280a"
     },
     {
       "path": "src/memory.ts",
@@ -152,8 +152,8 @@
     },
     {
       "path": "src/verification.ts",
-      "bytes": 36621,
-      "sha256": "c57e4efcee759c3871e411d51b4540cc77fb68821cea93ef8837402001d3f427"
+      "bytes": 36924,
+      "sha256": "4e9b2739393afea676a0dbcb688a2023ca2e793cd1bcce668e8e009799839619"
     },
     {
       "path": "tests/adapter.test.ts",
@@ -197,8 +197,8 @@
     },
     {
       "path": "tests/interactive.test.ts",
-      "bytes": 14185,
-      "sha256": "2c2b31eb37766a240bfbb62546c5370341ec6ea899dadc429dac77976424cb8a"
+      "bytes": 14985,
+      "sha256": "ebad0a21f63871bbd678aef5f22521733ad7ac8b98bdc86adec3ca1ceac276cc"
     },
     {
       "path": "tests/review-regressions.test.ts",
@@ -227,8 +227,8 @@
     },
     {
       "path": "tests/verification.test.ts",
-      "bytes": 32176,
-      "sha256": "6db36ce12084045bd14f322803958e4adc29c423868aadb6ef41407448a1814f"
+      "bytes": 32451,
+      "sha256": "618e9a4cfe777593e65cc8fd1ba5bd3cdbe6909357fa60fc53f9785f6613d6ae"
     },
     {
       "path": "third-party/pi-0.85.1/LICENSE",

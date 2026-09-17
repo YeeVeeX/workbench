@@ -295,7 +295,12 @@ for (const ignoreCase of [false, true]) {
     const directories = Array.from({ length: 5 }, (_, index) => `${index} long directory 雪 ${"x".repeat(45)}`);
     const name = [...directories, "nested space/源 ñ.txt"].join("/");
     await put(root, name, "long-path bytes 雪");
-    await git(root, "add", "--", name);
+    await put(root, "outside.txt", "must not enter the candidate");
+    if (process.platform !== "win32") {
+      const differentlyCased = name.replace("0 long directory", "0 LONG directory");
+      await put(root, differentlyCased, "a distinct case-sensitive source");
+    }
+    await git(root, "add", "--", ".");
     await git(root, "config", "core.ignorecase", String(ignoreCase));
     const longRoot = path.join(root, ...directories);
     const longState = path.join(state, ...directories);

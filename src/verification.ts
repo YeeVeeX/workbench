@@ -217,8 +217,7 @@ function utf8(buffer: Buffer): string {
 }
 
 async function git(root: string, args: string[]): Promise<Buffer> {
-  // Match scopeKey/within even when a repository inherits another platform's
-  // setting. On POSIX, ignorecase=true can omit tracked long literal pathspecs.
+  // Match scopeKey/within even when a repository inherits another platform's setting.
   const argv = ["-c", "core.longpaths=true", "-c", "core.quotepath=false",
     "-c", `core.ignorecase=${process.platform === "win32"}`, ...args];
   try {
@@ -529,6 +528,11 @@ async function selectSource(sourceRoot: string, stateDir: string, sourceScope: s
   const includes = sourceScope.length
     ? sourceScope.map((entry) => `${literal}${portable(path.relative(gitRoot, relativeFile(sourceRoot, entry)))}`)
     : prefix ? [`${literal}${prefix}`] : ["."];
+  // Git 2.55 on Ubuntu 24.04 can prune tracked long paths out of the index
+  // before matching a case-sensitive pathspec. An additional root-level
+  // include prevents that common-prefix optimization. Git metadata is always
+  // excluded below, so this preserves the exact literal source selection.
+  if (process.platform !== "win32") includes.push(":(top,literal).git");
   const output = utf8(await git(gitRoot, [
     "ls-files", "--cached", "--others", "--exclude-standard", "--full-name", "-z", "--", ...includes, ...exclusions,
   ]));
